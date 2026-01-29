@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   validate:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,10 +24,10 @@ jobs:
           cat > user_code.py << 'EOF'
           def calculate_total(items):
               """Calculate total price.
-              
+
               Args:
                   items (list): List of numeric values.
-              
+
               Returns:
                   float: Sum of all items.
               """
@@ -40,7 +41,7 @@ jobs:
         run: echo 'def bad(x): return x*2' > bad_code.py
 
       - name: Validate poorly documented code (FAIL case)
-        run: python docugenius_cli.py bad_code.py --min-coverage 90 --min-compliance 85 || true
+        run: python docugenius_cli.py bad_code.py --min-coverage 90 --min-compliance 85
         continue-on-error: true
 
       - name: Report results
