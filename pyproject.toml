@@ -1,0 +1,24 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docugenius-m2"
+version = "0.2.0"
+description = "Milestone 2: Automated Python Docstring Generator"
+requires-python = ">=3.9"
+dependencies = [
+    "pydocstyle>=6.0.0",
+    "astor>=0.8.0",
+    "streamlit>=1.28.0"
+]
+
+# pyproject.toml
+[tool.docugenius]
+style = "google"
+min_coverage = 90.0
+min_compliance = 85.0
+exclude_patterns = ["tests/**", "venv/**", "__pycache__/**", ".*"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
