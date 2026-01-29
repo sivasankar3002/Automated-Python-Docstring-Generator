@@ -1,0 +1,17 @@
+name: Docstring Validation
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install pydocstyle astor
+      - name: Run validation
+        run: |
+          python docugenius_cli.py m2_core.py streamlit_app.py --min-coverage 90 --min-compliance 85

@@ -5,11 +5,49 @@ import sys
 from pathlib import Path
 from m2_core import DocstringValidator
 
+# Config loader (works with Python 3.11+)
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import tomli as tomllib  # Python <3.11
+    except ImportError:
+        tomllib = None
+
+def load_config():
+    """Load configuration from pyproject.toml"""
+    config = {
+        "min_coverage": 90.0,
+        "min_compliance": 85.0,
+        "style": "google"
+    }
+    
+    try:
+        pyproject_path = Path("pyproject.toml")
+        if pyproject_path.exists() and tomllib:
+            # Read as binary to avoid encoding issues
+            with open(pyproject_path, "rb") as f:
+                pyproject = tomllib.load(f)
+            tool_config = pyproject.get("tool", {}).get("docugenius", {})
+            config.update(tool_config)
+            print(f"✓ Loaded config from pyproject.toml")
+    except Exception as e:
+        # Don't crash - just use defaults with warning
+        print(f"⚠️ Warning: Could not load pyproject.toml config: {e}", file=sys.stderr)
+    
+    return config
+
 def main():
+    config = load_config()
+    
     parser = argparse.ArgumentParser(description="DocuGenius Validator (Milestone 3)")
     parser.add_argument("files", nargs="+", help="Python files to validate")
-    parser.add_argument("--min-coverage", type=float, default=90.0, help="Coverage threshold")
-    parser.add_argument("--min-compliance", type=float, default=85.0, help="Compliance threshold")
+    parser.add_argument("--min-coverage", type=float, 
+                       default=config["min_coverage"],
+                       help=f"Coverage threshold (default: {config['min_coverage']}%)")
+    parser.add_argument("--min-compliance", type=float,
+                       default=config["min_compliance"],
+                       help=f"Compliance threshold (default: {config['min_compliance']}%)")
     parser.add_argument("--output", type=Path, help="Output JSON report")
     
     args = parser.parse_args()
@@ -21,7 +59,7 @@ def main():
     print(f"{'='*60}")
     
     results = []
-    all_passed = True  # ← START WITH TRUE
+    all_passed = True
     
     for filepath in args.files:
         if not filepath.endswith('.py'):
@@ -50,18 +88,19 @@ def main():
             })
             
             if not passed:
-                all_passed = False  # ← ONLY set to False if a file fails
+                all_passed = False
                 
         except Exception as e:
             print(f"\nError processing {filepath}: {e}")
-            all_passed = False  # ← Error = failure
+            all_passed = False
     
     # Generate report
     if args.output:
         report = {
-            "thresholds": {
+            "config": {
                 "min_coverage": args.min_coverage,
-                "min_compliance": args.min_compliance
+                "min_compliance": args.min_compliance,
+                "style": config["style"]
             },
             "files": results,
             "summary": {
@@ -79,11 +118,8 @@ def main():
     print(f"SUMMARY: {passed_count}/{len(results)} files passed")
     print(f"{'='*60}")
     
-    # CRITICAL: Exit with 0 if ALL passed, 1 if ANY failed
-    # At the VERY END of main() function, replace any existing sys.exit with:
-    if all_passed and len(results) > 0:
-        sys.exit(0)  # SUCCESS - all files passed
-    else:
-        sys.exit(1)  # FAILURE - some files failed or no files processed
+    # Critical: Exit with proper code
+    sys.exit(0 if all_passed and len(results) > 0 else 1)
+
 if __name__ == "__main__":
     main()

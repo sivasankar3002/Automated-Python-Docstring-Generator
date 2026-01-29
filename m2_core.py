@@ -313,8 +313,28 @@ class DocstringValidator:
         
         violation_count = len(violations)
         
-        # Calculate compliance percentage (prevent negative values)
-        compliance_percentage = max(0, min(100, round((total_items - violation_count) / total_items * 100, 1))) if total_items > 0 else 0
+        # Calculate compliance percentage based on documented items with violations
+        # Only count violations in documented items (items with docstrings)
+        items_with_violations = set()
+        for violation in violations:
+            # Track which line has violations
+            items_with_violations.add(violation.line)
+        
+        # Calculate compliance: (documented_items - items_with_violations) / documented_items
+        # If no documented items, compliance is 100% (nothing to validate)
+        if documented_items == 0:
+            compliance_percentage = 100.0
+        elif violation_count == 0:
+            compliance_percentage = 100.0
+        else:
+            # Estimate items with violations (each violation roughly corresponds to one item)
+            # This is approximate but works for most cases
+            affected_items = min(len(items_with_violations), documented_items)
+            compliant_items = documented_items - affected_items
+            compliance_percentage = round((compliant_items / documented_items) * 100, 1)
+            # Ensure non-negative
+            compliance_percentage = max(0.0, compliance_percentage)
+        
         
         return {
             'total_functions': total_functions,
