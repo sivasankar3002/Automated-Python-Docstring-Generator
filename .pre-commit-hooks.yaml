@@ -1,0 +1,9 @@
+# .pre-commit-hooks.yaml
+- id: docugenius-validate
+  name: Validate Python docstrings
+  description: Check docstring coverage and PEP 257 compliance using your m2_core.py
+  entry: python docugenius_cli.py validate --enforce
+  language: system
+  types: [python]
+  require_serial: true
+  pass_filenames: true
